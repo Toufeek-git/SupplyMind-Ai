@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupplyMind AI - Intelligent Supply Chain Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' },
+                        accent: { green: '#10b981', blue: '#3b82f6', warning: '#f59e0b', danger: '#ef4444' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+    <!-- ================= AUTHENTICATION / LOGIN SCREEN ================= -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <!-- Language Selector on Login Page -->
+        <div class="absolute top-6 right-6 flex items-center space-x-2">
+            <i data-lucide="globe" class="w-4 h-4 text-slate-400"></i>
+            <select id="loginLangSelect" onchange="changeLanguage(this.value)" class="bg-slate-800 text-white text-xs font-medium px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <option value="en">English</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+            </select>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-700/20">
+            <div class="text-center mb-8">
+                <img src="logo.jpeg" alt="SupplyMind AI Logo" class="h-20 mx-auto mb-3 object-contain rounded-xl">
+                <h1 id="t-loginTitle" class="text-2xl font-bold text-slate-900">SupplyMind AI</h1>
+                <p id="t-loginSub" class="text-sm text-slate-500 mt-1">Secure Enterprise Portal for MSME Manufacturers</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label id="t-companyLabel" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Company Name / ID</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                        </span>
+                        <input type="text" id="companyInput" required placeholder="e.g. Apex Precision Tech" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label id="t-passLabel" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Secure Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="lock" class="w-5 h-5"></i>
+                        </span>
+                        <input type="password" id="passwordInput" required placeholder="••••••••" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center text-slate-600">
+                        <input type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2"> <span id="t-remember">Remember device</span>
+                    </label>
+                    <a href="#" onclick="alert('Contact your factory system admin to reset credentials.')" id="t-forgot" class="text-blue-600 hover:underline font-medium">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md shadow-blue-600/30 transition flex items-center justify-center space-x-2">
+                    <span id="t-loginBtn">Authenticate & Launch Dashboard</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+
+                <div class="pt-4 border-t border-slate-100 text-center">
+                    <button type="button" onclick="quickDemoLogin()" id="t-demoBtn" class="text-xs text-blue-600 hover:text-blue-800 font-semibold bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200 transition">
+                        ⚡ Click for Demo Quick-Fill
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP SHELL ================= -->
+    <div id="appContainer" class="hidden min-h-screen flex flex-col">
+        
+        <!-- Top Navigation -->
+        <header class="bg-navy-900 text-white shadow-md z-30 sticky top-0">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="logo.jpeg" alt="SupplyMind AI Logo" class="h-10 w-10 bg-white rounded-lg object-contain p-0.5 shadow">
+                    <div>
+                        <span class="font-bold text-lg tracking-wide">SupplyMind <span class="text-accent-blue">AI</span></span>
+                        <span class="block text-[10px] text-slate-400 tracking-wider uppercase">Founders Arena Demo Build</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Language Selector on Dashboard -->
+                    <div class="flex items-center space-x-1.5 bg-navy-800 px-2.5 py-1.5 rounded-lg border border-slate-700">
+                        <i data-lucide="globe" class="w-3.5 h-3.5 text-slate-400"></i>
+                        <select id="appLangSelect" onchange="changeLanguage(this.value)" class="bg-navy-800 text-white text-xs font-medium focus:outline-none">
+                            <option value="en">English</option>
+                            <option value="kn">ಕನ್ನಡ</option>
+                            <option value="hi">हिन्दी</option>
+                        </select>
+                    </div>
+
+                    <button onclick="triggerStockShock()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold px-3 py-2 rounded-lg shadow transition flex items-center space-x-1.5">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        <span id="t-simBtn">Simulate Rush Order</span>
+                    </button>
+                    
+                    <div class="flex items-center space-x-2 bg-navy-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span id="displayCompany" class="text-xs font-medium text-slate-200">Apex Manufacturing</span>
+                    </div>
+
+                    <button onclick="handleLogout()" class="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-navy-800 transition" title="Logout">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 flex">
+            <!-- Sidebar Navigation -->
+            <aside class="w-64 bg-navy-800 text-slate-300 hidden md:block border-r border-slate-700">
+                <div class="p-4 space-y-1">
+                    <p id="t-modules" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2">Modules</p>
+                    <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg bg-blue-600 text-white font-medium text-sm transition">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <span id="t-navDash">Executive Dashboard</span>
+                    </a>
+                    <a href="#" onclick="switchTab('inventory')" id="nav-inventory" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 hover:text-white text-sm transition">
+                        <i data-lucide="boxes" class="w-5 h-5"></i>
+                        <span id="t-navInv">Inventory Ledger</span>
+                    </a>
+                    <a href="#" onclick="switchTab('suppliers')" id="nav-suppliers" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 hover:text-white text-sm transition">
+                        <i data-lucide="truck" class="w-5 h-5"></i>
+                        <span id="t-navSup">Suppliers & Reliability</span>
+                    </a>
+                    <a href="#" onclick="switchTab('shortage')" id="nav-shortage" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 hover:text-white text-sm transition">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
+                        <span id="t-navShort">Shortage Engine</span>
+                    </a>
+                    <a href="#" onclick="switchTab('ai')" id="nav-ai" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 hover:text-white text-sm transition">
+                        <i data-lucide="bot" class="w-5 h-5 text-emerald-400"></i>
+                        <span id="t-navAi">AI Floor Co-Pilot</span>
+                    </a>
+                    <a href="#" onclick="switchTab('pos')" id="nav-pos" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 hover:text-white text-sm transition">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        <span id="t-navPo">Purchase Orders</span>
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Main Content Viewport -->
+            <main class="flex-1 p-6 overflow-y-auto">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <div id="tab-dashboard" class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-dashHeading" class="text-2xl font-bold text-slate-900">Plant Operations Overview</h2>
+                            <p id="t-dashSub" class="text-sm text-slate-500">Real-time status of raw materials, supplier lead times, and inventory runway.</p>
+                        </div>
+                        <div class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium flex items-center space-x-1">
+                            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                            <span id="t-aiActive">AI Forecast Model Active (98.4% Accuracy)</span>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p id="t-kpi1" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Raw Materials</p>
+                                    <h3 class="text-2xl font-bold text-slate-900 mt-1">24 SKUs</h3>
+                                </div>
+                                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="layers" class="w-5 h-5"></i></div>
+                            </div>
+                            <span class="text-xs text-emerald-600 font-medium mt-3 block">₹18.45L Working Capital Value</span>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p id="t-kpi2" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Critical Shortages</p>
+                                    <h3 id="kpiCritical" class="text-2xl font-bold text-red-600 mt-1">2 SKUs</h3>
+                                </div>
+                                <div class="p-2.5 bg-red-50 text-red-600 rounded-lg"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>
+                            </div>
+                            <span class="text-xs text-red-600 font-medium mt-3 block">Action Required Within 48 Hrs</span>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p id="t-kpi3" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pending POs</p>
+                                    <h3 class="text-2xl font-bold text-slate-900 mt-1">4 Orders</h3>
+                                </div>
+                                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="truck" class="w-5 h-5"></i></div>
+                            </div>
+                            <span class="text-xs text-slate-500 mt-3 block">Estimated Arrival: In 2 Days</span>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p id="t-kpi4" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Supplier Reliability</p>
+                                    <h3 class="text-2xl font-bold text-slate-900 mt-1">94.2%</h3>
+                                </div>
+                                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="award" class="w-5 h-5"></i></div>
+                            </div>
+                            <span class="text-xs text-emerald-600 font-medium mt-3 block">+1.4% vs last month</span>
+                        </div>
+                    </div>
+
+                    <!-- Material Status Table -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                            <h3 id="t-tableTitle" class="font-bold text-slate-900">Critical Inventory & Shortage Radar</h3>
+                            <button onclick="switchTab('shortage')" id="t-viewFull" class="text-xs text-blue-600 font-semibold hover:underline">View Full Analysis &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                               <thead>
+                                    <tr class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
+                                        <th id="th-mat" class="py-3 px-6">Material Name</th>
+                                        <th id="th-cat" class="py-3 px-6">Category</th>
+                                        <th id="th-stock" class="py-3 px-6">Available Stock</th>
+                                        <th id="th-use" class="py-3 px-6">Avg Daily Use</th>
+                                        <th id="th-runway" class="py-3 px-6">Stock Runway</th>
+                                        <th id="th-status" class="py-3 px-6">AI Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardTableBody" class="divide-y divide-slate-200 text-sm">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: INVENTORY -->
+                <div id="tab-inventory" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-invHeading" class="text-2xl font-bold text-slate-900">Inventory Ledger & Stock Control</h2>
+                            <p id="t-invSub" class="text-sm text-slate-500">Immutable transaction ledger ensuring zero unaccounted stock shrinkage.</p>
+                        </div>
+                        <button onclick="alert('Opening modal to add new raw material SKU...')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold shadow transition flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span id="t-addSku">Add New Material SKU</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <div class="flex gap-4 mb-4">
+                            <input type="text" id="t-searchPlaceholder" placeholder="Search by material name or code..." class="flex-1 px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <select class="px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                                <option>All Categories</option>
+                                <option>Metals</option>
+                                <option>Chemicals</option>
+                                <option>Polymers</option>
+                            </select>
+                        </div>
+                        <div id="fullInventoryList" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: SUPPLIERS -->
+                <div id="tab-suppliers" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-supHeading" class="text-2xl font-bold text-slate-900">Supplier Reliability & Scoring</h2>
+                            <p id="t-supSub" class="text-sm text-slate-500">Tracking quoted prices, verified brand quality, nearby distance, and AI procurement recommendations.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="supplierCardsGrid">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 4: SHORTAGE ENGINE -->
+                <div id="tab-shortage" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-shortHeading" class="text-2xl font-bold text-slate-900">AI Shortage Detection Engine</h2>
+                            <p id="t-shortSub" class="text-sm text-slate-500">Calculates Reorder Points (ROP) using consumption velocity and supplier lead times.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-navy-900 to-slate-800 rounded-2xl text-white p-6 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg flex items-center space-x-2">
+                                <i data-lucide="Cpu" class="w-5 h-5 text-accent-blue"></i>
+                                <span id="t-simCardTitle">Live Shortage Sensitivity Simulation</span>
+                            </h3>
+                            <span class="text-xs bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">Active Algorithm</span>
+                        </div>
+                        <p id="t-simCardDesc" class="text-sm text-slate-300 mb-6">Simulate a factory production surge to test how quickly current safety stock is depleted.</p>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-400">Production Demand Multiplier:</span>
+                                <span id="multiplierVal" class="font-bold text-accent-blue">1.2x (Normal Operations)</span>
+                            </div>
+                            <input type="range" min="1.0" max="2.5" step="0.1" value="1.2" oninput="updateSimulation(this.value)" class="w-full accent-blue-500">
+                        </div>
+                    </div>
+
+                    <div id="shortageAlertList" class="space-y-4">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 5: AI CO-PILOT -->
+                <div id="tab-ai" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-aiHeading" class="text-2xl font-bold text-slate-900">AI Floor Co-Pilot</h2>
+                            <p id="t-aiSub" class="text-sm text-slate-500">Plain-English assistant for factory supervisors to query inventory and supplier availability.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[500px]">
+                        <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">AI</div>
+                                <div id="t-aiWelcome" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 max-w-lg text-sm">
+                                    Hello Prem! I am your SupplyMind AI floor assistant. How can I help you optimize your inventory or check supplier statuses today?
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-white border-t border-slate-200 flex space-x-2">
+                            <input type="text" id="chatInput" placeholder="Ask e.g., 'Do we have enough Epoxy Resin for next week's orders?'" 
+                                class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                            <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center space-x-1">
+                                <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs font-semibold text-slate-500 self-center">Suggested Prompts:</span>
+                        <button onclick="fillAndSend('Which supplier has the fastest delivery time?')" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg">Which supplier has the fastest delivery?</button>
+                        <button onclick="fillAndSend('Calculate reorder quantity for Steel Rods')" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg">Calculate reorder quantity for Steel Rods</button>
+                        <button onclick="fillAndSend('Summarize critical shortages')" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg">Summarize critical shortages</button>
+                    </div>
+                </div>
+
+                <!-- TAB 6: PURCHASE ORDERS -->
+                <div id="tab-pos" class="hidden space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 id="t-poHeading" class="text-2xl font-bold text-slate-900">Purchase Orders & Auto-Replenishment</h2>
+                            <p id="t-poSub" class="text-sm text-slate-500">Drafted directly from AI shortage alerts to prevent production stoppages.</p>
+                        </div>
+                        <button onclick="alert('Creating new Purchase Order draft...')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold shadow transition flex items-center space-x-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span id="t-createPo">Create Manual PO</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="py-3 px-6">PO ID</th>
+                                    <th class="py-3 px-6">Material</th>
+                                    <th class="py-3 px-6">Supplier</th>
+                                    <th class="py-3 px-6">Quantity</th>
+                                    <th class="py-3 px-6">Status</th>
+                                    <th class="py-3 px-6">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poTableBody" class="divide-y divide-slate-200 text-sm">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Controller -->
+    <script>
+        let currentLang = 'en';
+
+        const translations = {
+            en: {
+                loginTitle: "SupplyMind AI",
+                loginSub: "Secure Enterprise Portal for MSME Manufacturers",
+                companyLabel: "Company Name / ID",
+                passLabel: "Secure Password",
+                remember: "Remember device",
+                forgot: "Forgot password?",
+                loginBtn: "Authenticate & Launch Dashboard",
+                demoBtn: "⚡ Click for Demo Quick-Fill",
+                simBtn: "Simulate Rush Order",
+                modules: "Modules",
+                navDash: "Executive Dashboard",
+                navInv: "Inventory Ledger",
+                navSup: "Suppliers & Reliability",
+                navShort: "Shortage Engine",
+                navAi: "AI Floor Co-Pilot",
+                navPo: "Purchase Orders",
+                dashHeading: "Plant Operations Overview",
+                dashSub: "Real-time status of raw materials, supplier lead times, and inventory runway.",
+                aiActive: "AI Forecast Model Active (98.4% Accuracy)",
+                kpi1: "Total Raw Materials",
+                kpi2: "Critical Shortages",
+                kpi3: "Pending POs",
+                kpi4: "Supplier Reliability",
+                tableTitle: "Critical Inventory & Shortage Radar",
+                viewFull: "View Full Analysis →",
+                thMat: "Material Name",
+                thCat: "Category",
+                thStock: "Available Stock",
+                thUse: "Avg Daily Use",
+                thRunway: "Stock Runway",
+                thStatus: "AI Status",
+                invHeading: "Inventory Ledger & Stock Control",
+                invSub: "Immutable transaction ledger ensuring zero unaccounted stock shrinkage.",
+                addSku: "Add New Material SKU",
+                supHeading: "Supplier Reliability & Scoring",
+                supSub: "Tracking quoted prices, verified brand quality, nearby distance, and AI procurement recommendations.",
+                shortHeading: "AI Shortage Detection Engine",
+                shortSub: "Calculates Reorder Points (ROP) using consumption velocity and supplier lead times.",
+                simCardTitle: "Live Shortage Sensitivity Simulation",
+                simCardDesc: "Simulate a factory production surge to test how quickly current safety stock is depleted.",
+                aiHeading: "AI Floor Co-Pilot",
+                aiSub: "Plain-English assistant for factory supervisors to query inventory and supplier availability.",
+                aiWelcome: "Hello Prem! I am your SupplyMind AI floor assistant. How can I help you optimize your inventory or check supplier statuses today?",
+                poHeading: "Purchase Orders & Auto-Replenishment",
+                poSub: "Drafted directly from AI shortage alerts to prevent production stoppages.",
+                createPo: "Create Manual PO"
+            },
+            kn: {
+                loginTitle: "ಸಪ್ಲೈಮೈಂಡ್ AI",
+                loginSub: "MSME ತಯಾರಕರಿಗಾಗಿ ಸುರಕ್ಷಿತ ಎಂಟರ್‌ಪ್ರೈಸ್ ಪೋರ್ಟಲ್",
+                companyLabel: "ಕಂಪನಿಯ ಹೆಸರು / ಐಡಿ",
+                passLabel: "ಸುರಕ್ಷಿತ ಪಾಸ್‌ವರ್ಡ್",
+                remember: "ಸಾಧನವನ್ನು ನೆನಪಿಡಿ",
+                forgot: "ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿರುವಿರಾ?",
+                loginBtn: "ದೃಢೀಕರಿಸಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಿರಿ",
+                demoBtn: "⚡ ಡೆಮೊಗಾಗಿ ತಕ್ಷಣ ಭರ್ತಿ ಮಾಡಿ",
+                simBtn: "ರಶ್ ಆರ್ಡರ್ ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಿ",
+                modules: "ಮಾಡ್ಯೂಲ್‌ಗಳು",
+                navDash: "ಕಾರ್ಯನಿರ್ವಾಹಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+                navInv: "ದಾಸ್ತಾನು ದಾಖಲೆ",
+                navSup: "ಪೂರೈಕೆದಾರರು ಮತ್ತು ವಿಶ್ವಾಸಾರ್ಹತೆ",
+                navShort: "ಕೊರತೆ ಎಂಜಿನ್",
+                navAi: "AI ಫ್ಲೋರ್ ಸಹಾಯಕ",
+                navPo: "ಖರೀದಿ ಆದೇಶಗಳು (PO)",
+                dashHeading: "ಪ್ಲಾಂಟ್ ಕಾರ್ಯಾಚರಣೆಗಳ ಅವಲೋಕನ",
+                dashSub: "ಕಚ್ಚಾ ವಸ್ತುಗಳು, ಪೂರೈಕೆದಾರರ ಸಮಯ ಮತ್ತು ಸ್ಟಾಕ್ ವಿವರಗಳ ನೈಜ-ಸಮಯದ ಸ್ಥಿತಿ.",
+                aiActive: "AI ಮುನ್ಸೂಚನೆ ಮಾದರಿ ಸಕ್ರಿಯವಾಗಿದೆ (98.4%)",
+                kpi1: "ಒಟ್ಟು ಕಚ್ಚಾ ವಸ್ತುಗಳು",
+                kpi2: "ನಿರ್ಣಾಯಕ ಕೊರತೆಗಳು",
+                kpi3: "ಬಾಕಿ ಇರುವ PO ಗಳು",
+                kpi4: "ಪೂರೈಕೆದಾರರ ವಿಶ್ವಾಸಾರ್ಹತೆ",
+                tableTitle: "ನಿರ್ಣಾಯಕ ದಾಸ್ತಾನು ಮತ್ತು ಕೊರತೆ ರಾಡಾರ್",
+                viewFull: "ಪೂರ್ಣ ವಿಶ್ಲೇಷಣೆ ನೋಡಿ →",
+                thMat: "ವಸ್ತುವಿನ ಹೆಸರು",
+                thCat: "ವರ್ಗ",
+                thStock: "ಲಭ್ಯವಿರುವ ಸ್ಟಾಕ್",
+                thUse: "ದೈನಂದಿನ ಬಳಕೆ",
+                thRunway: "ಉಳಿದಿರುವ ದಿನಗಳು",
+                thStatus: "AI ಸ್ಥಿತಿ",
+                invHeading: "ದಾಸ್ತಾನು ದಾಖಲೆ ಮತ್ತು ಸ್ಟಾಕ್ ನಿಯಂತ್ರಣ",
+                invSub: "ಸ್ಟಾಕ್ ಕೊರತೆಯನ್ನು ತಡೆಯಲು ನಿಖರವಾದ ವಹಿವಾಟು ದಾಖಲೆ.",
+                addSku: "ಹೊಸ ಕಚ್ಚಾ ವಸ್ತು ಸೇರಿಸಿ",
+                supHeading: "ಪೂರೈಕೆದಾರರ ವಿಶ್ವಾಸಾರ್ಹತೆ ಮತ್ತು ಸ್ಕೋರಿಂಗ್",
+                supSub: "ಬೆಲೆ, ಬ್ರಾಂಡ್ ಗುಣಮಟ್ಟ ಮತ್ತು AI ಶಿಫಾರಸುಗಳ ಟ್ರ್ಯಾಕಿಂಗ್.",
+                shortHeading: "AI ಕೊರತೆ ಪತ್ತೆ ಎಂಜಿನ್",
+                shortSub: "ಬಳಕೆಯ ವೇಗ ಮತ್ತು ಪೂರೈಕೆದಾರರ ಸಮಯವನ್ನು ಬಳಸಿ ಮರು-ಆರ್ಡರ್ ಮಟ್ಟವನ್ನು ಲೆಕ್ಕಹಾಕುತ್ತದೆ.",
+                simCardTitle: "ಲೈವ್ ಕೊರತೆ ಸಂವೇದನಾ ಸಿಮ್ಯುಲೇಶನ್",
+                simCardDesc: "ಉತ್ಪಾದನೆ ಹೆಚ್ಚಾದಾಗ ಸುರಕ್ಷತಾ ಸ್ಟಾಕ್ ಎಷ್ಟು ಬೇಗ ಖಾಲಿಯಾಗುತ್ತದೆ ಎಂದು ಪರೀಕ್ಷಿಸಿ.",
+                aiHeading: "AI ಫ್ಲೋರ್ ಸಹಾಯಕ",
+                aiSub: "ಕಾರ್ಖಾನೆ ಮೇಲ್ವಿಚಾರಕರಿಗೆ ದಾಸ್ತಾನು ಮತ್ತು ಪೂರೈಕೆದಾರರ ಮಾಹಿತಿ ನೀಡುವ ಸಹಾಯಕ.",
+                aiWelcome: "ನಮಸ್ಕಾರ ಪ್ರೇಮ್! ನಾನು ನಿಮ್ಮ ಸಪ್ಲೈಮೈಂಡ್ AI ಸಹಾಯಕ. ಇಂದು ನಿಮ್ಮ ದಾಸ್ತಾನು ನಿರ್ವಹಿಸಲು ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+                poHeading: "ಖರೀದಿ ಆದೇಶಗಳು (PO) ಮತ್ತು ಮರುಪೂರಣ",
+                poSub: "ಉತ್ಪಾದನೆ ನಿಲ್ಲದಂತೆ ತಡೆಯಲು AI ಎಚ್ಚರಿಕೆಗಳಿಂದ ನೇರವಾಗಿ ಸಿದ್ಧಪಡಿಸಲಾಗಿದೆ.",
+                createPo: "ಹೊಸ PO ರಚಿಸಿ"
+            },
+            hi: {
+                loginTitle: "सप्लाईमाइंड AI",
+                loginSub: "MSME निर्माताओं के लिए सुरक्षित एंटरप्राइज पोर्टल",
+                companyLabel: "कंपनी का नाम / आईडी",
+                passLabel: "सुरक्षित पासवर्ड",
+                remember: "डिवाइस याद रखें",
+                forgot: "पासवर्ड भूल गए?",
+                loginBtn: "प्रमाणित करें और डैशबोर्ड लॉन्च करें",
+                demoBtn: "⚡ डेमो त्वरित-भरने के लिए क्लिक करें",
+                simBtn: "रश ऑर्डर सिमुलेट करें",
+                modules: "मॉड्यूल",
+                navDash: "एग्जीक्यूटिव डैशबोर्ड",
+                navInv: "इन्वेंटरी लेजर",
+                navSup: "आपूर्तिकर्ता और विश्वसनीयता",
+                navShort: "कमी इंजन",
+                navAi: "AI फ्लोर को-पायलट",
+                navPo: "खरीद आदेश (POs)",
+                dashHeading: "प्लांट संचालन का अवलोकन",
+                dashSub: "कच्चे माल, आपूर्तिकर्ता लीड समय और इन्वेंटरी रनवे की वास्तविक समय स्थिति।",
+                aiActive: "AI पूर्वानुमान मॉडल सक्रिय (98.4% सटीकता)",
+                kpi1: "कुल कच्चा माल",
+                kpi2: "गंभीर कमियां",
+                kpi3: "लंबित POs",
+                kpi4: "आपूर्तिकर्ता विश्वसनीयता",
+                tableTitle: "गंभीर इन्वेंटरी और कमी रडार",
+                viewFull: "पूर्ण विश्लेषण देखें →",
+                thMat: "सामग्री का नाम",
+                thCat: "श्रेणी",
+                thStock: "उपलब्ध स्टॉक",
+                thUse: "दैनिक उपयोग",
+                thRunway: "स्टॉक रनवे",
+                thStatus: "AI स्थिति",
+                invHeading: "इन्वेंटरी लेजर और स्टॉक नियंत्रण",
+                invSub: "स्टॉक की कमी को रोकने के लिए सटीक लेनदेन रिकॉर्ड।",
+                addSku: "नया मटेरियल SKU जोड़ें",
+                supHeading: "आपूर्तिकर्ता विश्वसनीयता और स्कोरिंग",
+                supSub: "मूल्य, ब्रांड गुणवत्ता और AI अनुशंसाओं की ट्रैकिंग।",
+                shortHeading: "AI कमी पहचान इंजन",
+                shortSub: "खपत की गति और लीड समय का उपयोग करके रीऑर्डर पॉइंट की गणना करता है।",
+                simCardTitle: "लाइव कमी संवेदनशीलता सिमुलेशन",
+                simCardDesc: "उत्पादन बढ़ने पर सुरक्षा स्टॉक कितनी जल्दी खत्म होता है, इसका परीक्षण करें।",
+                aiHeading: "AI फ्लोर को-पायलट",
+                aiSub: "फैक्ट्री सुपरवाइजरों के लिए इन्वेंटरी और आपूर्तिकर्ता की जानकारी देने वाला सहायक।",
+                aiWelcome: "नमस्कार प्रेम! मैं आपका सप्लाईमाइंड AI सहायक हूँ। आज मैं आपकी इन्वेंटरी को अनुकूलित करने में कैसे मदद कर सकता हूँ?",
+                poHeading: "खरीद आदेश और ऑटो-रीप्लेनिशमेंट",
+                poSub: "उत्पादन रुकने से बचाने के लिए सीधे AI अलर्ट से तैयार किया गया।",
+                createPo: "मैनुअल PO बनाएं"
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('loginLangSelect').value = lang;
+            document.getElementById('appLangSelect').value = lang;
+
+            const t = translations[lang];
+            document.getElementById('t-loginTitle').innerText = t.loginTitle;
+            document.getElementById('t-loginSub').innerText = t.loginSub;
+            document.getElementById('t-companyLabel').innerText = t.companyLabel;
+            document.getElementById('t-passLabel').innerText = t.passLabel;
+            document.getElementById('t-remember').innerText = t.remember;
+            document.getElementById('t-forgot').innerText = t.forgot;
+            document.getElementById('t-loginBtn').innerText = t.loginBtn;
+            document.getElementById('t-demoBtn').innerText = t.demoBtn;
+            document.getElementById('t-simBtn').innerText = t.simBtn;
+            document.getElementById('t-modules').innerText = t.modules;
+            document.getElementById('t-navDash').innerText = t.navDash;
+            document.getElementById('t-navInv').innerText = t.navInv;
+            document.getElementById('t-navSup').innerText = t.navSup;
+            document.getElementById('t-navShort').innerText = t.navShort;
+            document.getElementById('t-navAi').innerText = t.navAi;
+            document.getElementById('t-navPo').innerText = t.navPo;
+            document.getElementById('t-dashHeading').innerText = t.dashHeading;
+            document.getElementById('t-dashSub').innerText = t.dashSub;
+            document.getElementById('t-aiActive').innerText = t.aiActive;
+            document.getElementById('t-kpi1').innerText = t.kpi1;
+            document.getElementById('t-kpi2').innerText = t.kpi2;
+            document.getElementById('t-kpi3').innerText = t.kpi3;
+            document.getElementById('t-kpi4').innerText = t.kpi4;
+            document.getElementById('t-tableTitle').innerText = t.tableTitle;
+            document.getElementById('t-viewFull').innerText = t.viewFull;
+            document.getElementById('th-mat').innerText = t.thMat;
+            document.getElementById('th-cat').innerText = t.thCat;
+            document.getElementById('th-stock').innerText = t.thStock;
+            document.getElementById('th-use').innerText = t.thUse;
+            document.getElementById('th-runway').innerText = t.thRunway;
+            document.getElementById('th-status').innerText = t.thStatus;
+            document.getElementById('t-invHeading').innerText = t.invHeading;
+            document.getElementById('t-invSub').innerText = t.invSub;
+            document.getElementById('t-addSku').innerText = t.addSku;
+            document.getElementById('t-supHeading').innerText = t.supHeading;
+            document.getElementById('t-supSub').innerText = t.supSub;
+            document.getElementById('t-shortHeading').innerText = t.shortHeading;
+            document.getElementById('t-shortSub').innerText = t.shortSub;
+            document.getElementById('t-simCardTitle').innerText = t.simCardTitle;
+            document.getElementById('t-simCardDesc').innerText = t.simCardDesc;
+            document.getElementById('t-aiHeading').innerText = t.aiHeading;
+            document.getElementById('t-aiSub').innerText = t.aiSub;
+            document.getElementById('t-aiWelcome').innerText = t.aiWelcome;
+            document.getElementById('t-poHeading').innerText = t.poHeading;
+            document.getElementById('t-poSub').innerText = t.poSub;
+            document.getElementById('t-createPo').innerText = t.createPo;
+        }
+
+        // Mock Database with Nearby Cost, Good Brand, Location Distance & AI Recommendation
+        let inventoryData = [
+            { id: "MAT-101", name: "Industrial Epoxy Resin", code: "RES-01", category: "Chemicals", stock: 45, reserved: 40, safety: 30, daily: 18, unit: "litres", supplier: "Apex Polymers Ltd", leadTime: 4 },
+            { id: "MAT-102", name: "Steel Rods (Grade A)", code: "STL-05", category: "Metals", stock: 120, reserved: 90, safety: 50, daily: 35, unit: "pieces", supplier: "Karnataka Metals Corp", leadTime: 3 },
+            { id: "MAT-103", name: "Corrugated Packing Boxes", code: "PKG-12", category: "Packaging", stock: 850, reserved: 400, safety: 200, daily: 120, unit: "pieces", supplier: "Mangalore Packaging", leadTime: 2 },
+            { id: "MAT-104", name: "PVC Granules", code: "PVC-09", category: "Polymers", stock: 310, reserved: 250, safety: 150, daily: 65, unit: "kilograms", supplier: "Coastal Plastics", leadTime: 5 }
+        ];
+
+        let supplierData = [
+            { 
+                name: "Apex Polymers Ltd", 
+                contact: "Rajesh Rao", 
+                phone: "+91 98450 12345", 
+                rating: "4.8/5", 
+                reliability: "96%", 
+                leadTime: "4 Days", 
+                cost: "₹140/litre", 
+                brand: "Apex Gold (ISO 9001)", 
+                location: "Mangalore Industrial Area (6 km away)", 
+                recommended: false 
+            },
+            { 
+                name: "Karnataka Metals Corp", 
+                contact: "Suresh Hegde", 
+                phone: "+91 94481 67890", 
+                rating: "4.2/5", 
+                reliability: "88%", 
+                leadTime: "3 Days", 
+                cost: "₹85/piece", 
+                brand: "Tata Certified Grade A", 
+                location: "Baikampady (12 km away)", 
+                recommended: false 
+            },
+            { 
+                name: "Mangalore Packaging", 
+                contact: "Anitha Kamath", 
+                phone: "+91 98802 33445", 
+                rating: "4.9/5", 
+                reliability: "98%", 
+                leadTime: "2 Days", 
+                cost: "₹18/box", 
+                brand: "EcoPack Pro (Top Quality)", 
+                location: "Kankanady (4 km away)", 
+                recommended: true // AI Recommended Best Supplier
+            },
+            { 
+                name: "Coastal Plastics", 
+                contact: "Vinayak Shenoy", 
+                phone: "+91 97411 55667", 
+                rating: "4.5/5", 
+                reliability: "92%", 
+                leadTime: "5 Days", 
+                cost: "₹95/kg", 
+                brand: "PolyMaster Premium", 
+                location: "Surathkal (15 km away)", 
+                recommended: false 
+            }
+        ];
+
+        let poData = [
+            { poId: "PO-2026-01", material: "Industrial Epoxy Resin", supplier: "Apex Polymers Ltd", qty: "200 litres", status: "Pending Delivery" },
+            { poId: "PO-2026-02", material: "Steel Rods (Grade A)", supplier: "Karnataka Metals Corp", qty: "500 pieces", status: "In Transit" },
+            { poId: "PO-2026-03", material: "Corrugated Packing Boxes", supplier: "Mangalore Packaging", qty: "1,500 pieces", status: "Delivered" }
+        ];
+
+        // Auth Handlers
+        function handleLogin(e) {
+            e.preventDefault();
+            const company = document.getElementById('companyInput').value || "Apex Manufacturing";
+            document.getElementById('displayCompany').innerText = company;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            renderAllViews();
+            lucide.createIcons();
+        }
+
+        function quickDemoLogin() {
+            document.getElementById('companyInput').value = "Apex Manufacturing (Founders Arena Demo)";
+            document.getElementById('passwordInput').value = "demopass123";
+            setTimeout(() => {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }, 300);
+        }
+
+        function handleLogout() {
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            ['dashboard', 'inventory', 'suppliers', 'shortage', 'ai', 'pos'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const nav = document.getElementById(`nav-${t}`);
+                if(nav) {
+                    nav.classList.remove('bg-blue-600', 'text-white');
+                    nav.classList.add('hover:bg-slate-700', 'hover:text-white');
+                }
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if(activeNav) {
+                activeNav.classList.add('bg-blue-600', 'text-white');
+                activeNav.classList.remove('hover:bg-slate-700', 'hover:text-white');
+            }
+            lucide.createIcons();
+        }
+
+        // Render Views
+        function renderAllViews() {
+            // Dashboard Table & Critical count
+            let criticalCount = 0;
+            let dashHtml = '';
+            let inventoryHtml = '';
+            let shortageHtml = '';
+
+            inventoryData.forEach(item => {
+                const available = item.stock - item.reserved;
+                const runway = (available / item.daily).toFixed(1);
+                const isCritical = runway < 3.0;
+                if(isCritical) criticalCount++;
+
+                const statusBadge = isCritical 
+                    ? `<span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold animate-pulse">CRITICAL SHORTAGE</span>`
+                    : `<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-semibold">Healthy</span>`;
+
+                dashHtml += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-6 font-medium text-slate-900">${item.name} <span class="block text-xs text-slate-400">${item.code}</span></td>
+                        <td class="py-3 px-6 text-slate-600">${item.category}</td>
+                        <td class="py-3 px-6 font-bold text-slate-800">${available} ${item.unit}</td>
+                        <td class="py-3 px-6 text-slate-600">${item.daily} ${item.unit}/day</td>
+                        <td class="py-3 px-6 font-semibold ${isCritical ? 'text-red-600' : 'text-slate-800'}">${runway} Days</td>
+                        <td class="py-3 px-6">${statusBadge}</td>
+                    </tr>
+                `;
+
+                inventoryHtml += `
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-slate-900">${item.name} (${item.code})</h4>
+                            <p class="text-xs text-slate-500">Category: ${item.category} | Supplier: ${item.supplier}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-slate-800">Stock: ${item.stock} ${item.unit}</span>
+                            <span class="block text-xs text-slate-500">Reserved: ${item.reserved} | Safety: ${item.safety}</span>
+                        </div>
+                    </div>
+                `;
+
+                shortageHtml += `
+                    <div class="bg-white p-5 rounded-xl border ${isCritical ? 'border-red-300 bg-red-50/20' : 'border-slate-200'} shadow-sm flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h4 class="font-bold text-slate-900">${item.name}</h4>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-xs text-slate-600 mt-1">Available Runway: <span class="font-bold">${runway} days</span> (Lead time: ${item.leadTime} days). Reorder Point threshold: ${item.safety + (item.daily * item.leadTime)} ${item.unit}.</p>
+                        </div>
+                        <button onclick="autoDraftPO('${item.name}', '${item.supplier}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow transition">
+                            Auto-Draft PO ⚡
+                        </button>
+                    </div>
+                `;
+            });
+
+            document.getElementById('dashboardTableBody').innerHTML = dashHtml;
+            document.getElementById('kpiCritical').innerText = `${criticalCount} SKUs`;
+            document.getElementById('fullInventoryList').innerHTML = inventoryHtml;
+            document.getElementById('shortageAlertList').innerHTML = shortageHtml;
+
+            // Suppliers Grid with Predicted Cost, Brand, Location & AI Recommendation
+            let supHtml = '';
+            supplierData.forEach(s => {
+                const recBadge = s.recommended 
+                    ? `<div class="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-md inline-flex items-center space-x-1 mb-2 shadow"><i data-lucide="award" class="w-3.5 h-3.5"></i><span>⭐ AI Recommended Best Choice</span></div>` 
+                    : '';
+                
+                supHtml += `
+                    <div class="bg-white p-5 rounded-xl border ${s.recommended ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg bg-emerald-50/10' : 'border-slate-200'} shadow-sm space-y-3 relative">
+                        ${recBadge}
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-bold text-slate-900 text-base">${s.name}</h4>
+                            <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">${s.rating}</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Contact: ${s.contact} (${s.phone})</p>
+                        <div class="text-xs space-y-2 pt-2 border-t border-slate-100">
+                            <div class="flex justify-between items-center"><span class="text-slate-500">📍 Nearby Location:</span><span class="font-medium text-slate-800">${s.location}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500">💰 Estimated Cost:</span><span class="font-bold text-blue-600">${s.cost}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500">🛡️ Verified Brand:</span><span class="font-semibold text-slate-800">${s.brand}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500">⚡ Reliability:</span><span class="font-bold text-emerald-600">${s.reliability}</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-500">⏱️ Lead Time:</span><span class="font-medium text-slate-800">${s.leadTime}</span></div>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('supplierCardsGrid').innerHTML = supHtml;
+
+            // PO Table
+            let poHtml = '';
+            poData.forEach(p => {
+                poHtml += `
+                    <tr>
+                        <td class="py-3 px-6 font-bold text-blue-600">${p.poId}</td>
+                        <td class="py-3 px-6 text-slate-900">${p.material}</td>
+                        <td class="py-3 px-6 text-slate-600">${p.supplier}</td>
+                        <td class="py-3 px-6 text-slate-800 font-medium">${p.qty}</td>
+                        <td class="py-3 px-6"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-xs font-semibold">${p.status}</span></td>
+                        <td class="py-3 px-6"><button onclick="alert('PO verified & inventory updated!')" class="text-xs text-blue-600 hover:underline font-semibold">Mark Delivered</button></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('poTableBody').innerHTML = poHtml;
+        }
+
+        // Interactive simulation
+        function triggerStockShock() {
+            inventoryData[0].stock = 25; // drop resin stock
+            inventoryData[1].stock = 60; // drop steel stock
+            renderAllViews();
+            switchTab('shortage');
+            alert('⚡ Rush Order Simulated! Resin and Steel stock levels dropped. Check Shortage Engine alerts.');
+        }
+
+        function updateSimulation(val) {
+            document.getElementById('multiplierVal').innerText = `${val}x Demand Surge`;
+        }
+
+        function autoDraftPO(mat, sup) {
+            alert(`⚡ Purchase Order successfully auto-drafted for ${mat} from ${sup}! Sent to Purchase Orders module.`);
+            switchTab('pos');
+        }
+
+        // AI Chat
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            const chatContainer = document.getElementById('chatMessages');
+            chatContainer.innerHTML += `
+                <div class="flex items-end justify-end space-x-3">
+                    <div class="bg-blue-600 text-white p-4 rounded-2xl shadow-sm max-w-lg text-sm">${msg}</div>
+                    <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs">You</div>
+                </div>
+            `;
+            input.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "Based on our live inventory and supplier lead times, you have sufficient stock for current production. However, Industrial Epoxy Resin will hit reorder threshold in 2.5 days.";
+                if(msg.toLowerCase().includes('supplier')) {
+                    reply = "Mangalore Packaging is currently recommended as your best overall vendor with 98% reliability, 2-day lead time, and top brand quality (EcoPack Pro) at ₹18/box.";
+                } else if(msg.toLowerCase().includes('steel')) {
+                    reply = "Steel Rods current stock is 120 pieces with a daily consumption of 35. Recommended reorder quantity is 400 pieces from Karnataka Metals Corp.";
+                }
+
+                chatContainer.innerHTML += `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">AI</div>
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 max-w-lg text-sm">${reply}</div>
+                    </div>
+                `;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                lucide.createIcons();
+            }, 600);
+        }
+
+        function fillAndSend(text) {
+            document.getElementById('chatInput').value = text;
+            sendChatMessage();
+        }
+
+        // Initialize icons on page load
+        lucide.createIcons();
+    </script>
+</body>
+</html>
